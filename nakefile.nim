@@ -13,16 +13,16 @@ let sdlRoot = "~/Projects/SDL"
 # Needed for android only
 let nimIncludeDir = "~/Projects/Nimrod/lib"
 
-let macOSSDKVersion = "10.10"
+let macOSSDKVersion = "10.11"
 let macOSMinVersion = "10.6"
 
-let iOSSDKVersion = "8.1"
+let iOSSDKVersion = "9.2"
 let iOSMinVersion = iOSSDKVersion
 
 # Simulator device identifier should be set to run the simulator.
 # Available simulators can be listed with the command:
 # $ xcrun simctl list
-let iOSSimulatorDeviceId = "F5D507BE-429C-4A14-861A-73A2335CAE52"
+let iOSSimulatorDeviceId = "581E5F3F-814A-484F-B015-33B95851B947"
 
 let bundleName = appName & ".app"
 
@@ -64,7 +64,7 @@ proc createSDLIncludeLink(dir: string) =
 proc runAppInSimulator() =
     var waitForDebugger = "--wait-for-debugger"
     waitForDebugger = ""
-    direShell "open", "-a", "iOS\\ Simulator"
+    direShell "open", "-a", "Simulator"
     shell "xcrun", "simctl", "uninstall", iOSSimulatorDeviceId, bundleId
     direShell "xcrun", "simctl", "install", iOSSimulatorDeviceId, bundleName
     direShell "xcrun", "simctl", "launch", waitForDebugger, iOSSimulatorDeviceId, bundleId

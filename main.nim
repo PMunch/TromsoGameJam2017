@@ -34,7 +34,7 @@ macro useFrameworks(n: varargs[string]): stmt =
         result.add parseStmt("passToCAndL(\"-framework " & n[i].strVal & "\")")
 
 when defined(ios):
-    useFrameworks("OpenGLES", "UIKit")
+    useFrameworks("OpenGLES", "UIKit", "GameController", "CoreMotion")
     when not defined(simulator):
         {.passC:"-arch armv7".}
         {.passL:"-arch armv7".}
