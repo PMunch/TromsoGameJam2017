@@ -5,13 +5,13 @@ let appName = "MyGame"
 let bundleId = "com.mycompany.MyGame"
 let javaPackageId = "com.mycompany.MyGame"
 
-let androidSdk = "~/android-sdks"
-let androidNdk = "~/android-ndk-r8e"
-let sdlRoot = "~/Projects/SDL"
+let androidSdk = """/home/peter/HDD_storage/AndroidSDK/android-sdk-linux"""
+let androidNdk = """/home/peter/HDD_storage/AndroidSDK/android-ndk-r12"""
+let sdlRoot = "/home/peter/Programming/SDL2-2.0.4"
 
 # This should point to the Nim include dir, where nimbase.h resides.
 # Needed for android only
-let nimIncludeDir = "~/Projects/Nimrod/lib"
+let nimIncludeDir = "/home/peter/Projects/Nim/lib"
 
 let macOSSDKVersion = "10.11"
 let macOSMinVersion = "10.6"
@@ -157,11 +157,11 @@ task "droid", "Build for android":
     runNim "--compileOnly",  "--cpu:arm", "--os:linux", "-d:android", "-d:SDL_Static", "--nimcache:" & droidSrcDir
     cd buildDir
     putEnv "NIM_INCLUDE_DIR", expandTilde(nimIncludeDir)
-    direShell androidSdk/"tools/android", "update", "project", "-p", ".", "-t", "android-20"
+    direShell androidSdk/"tools/android", "update", "project", "-p", ".", "-t", "android-21"
     direShell androidNdk/"ndk-build"
     direShell "ant", "debug"
 
 task "droid-install", "Install to android device.":
     cd makeAndroidBuildDir()
     direShell "ant", "debug", "install"
-
+    

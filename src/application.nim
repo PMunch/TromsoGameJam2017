@@ -63,4 +63,3 @@ while runGame:
       break
 
 sdl2.quit()
-

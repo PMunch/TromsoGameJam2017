@@ -13,14 +13,14 @@ when defined(macosx) or defined(ios):
         {.emit: "NSLog(CFSTR(\"%s\"), `a`);" .}
 
     proc log*(a: varargs[string, `$`]) = NSLog_imported(a.join())
+
 elif defined(android):
     {.emit: """
     #include <android/log.h>
     """.}
 
-    proc droid_log_imported(a: cstring) =
-        {.emit: """__android_log_print(ANDROID_LOG_INFO, "NIM_APP", `a`);""".}
-    proc log*(a: varargs[string, `$`]) = droid_log_imported(a.join())
+    proc log*(a: varargs[string, `$`]) =
+      var b:cstring = a.join()
+      {.emit: """__android_log_write(ANDROID_LOG_INFO, "NIM_APP", `b`);""".}
 else:
-    proc log*(a: varargs[string, `$`]) = echo a
-
+    proc log*(a: varargs[string, `$`]) = echo a.join()
