@@ -161,6 +161,18 @@ task "droid", "Build for android":
     direShell androidNdk/"ndk-build"
     direShell "ant", "debug"
 
+task "droid-debug", "Build for android":
+    let buildDir = makeAndroidBuildDir()
+    let droidSrcDir = buildDir / "jni/src"
+    runNim "--compileOnly",  "--cpu:arm", "--os:linux", "-d:android", "-d:SDL_Static", "--nimcache:" & droidSrcDir
+    cd buildDir
+    putEnv "NIM_INCLUDE_DIR", expandTilde(nimIncludeDir)
+    direShell androidSdk/"tools/android", "update", "project", "-p", ".", "-t", "android-21"
+    direShell androidNdk/"ndk-build", "NDK_DEBUG=1"
+    direShell "ant", "debug"
+
+
+
 task "droid-install", "Install to android device.":
     cd makeAndroidBuildDir()
     direShell "ant", "debug", "install"
