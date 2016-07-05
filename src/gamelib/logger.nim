@@ -1,3 +1,7 @@
+###########################################################
+# The content of this file is borrowed directly from the Nim SDL template project: https://github.com/yglukhov/nim-sdl-template/blob/master/src/nimx/logging.nim
+###########################################################
+
 import strutils
 
 # Support logging on iOS and android

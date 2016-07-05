@@ -1,4 +1,6 @@
 /nakefile
+/main
 /nimcache
 /android/*
+/main
 !/android/template

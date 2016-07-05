@@ -1,0 +1,228 @@
+
+pack.png
+size: 2048,2048
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Background/bakgrunn3
+  rotate: false
+  xy: 2, 1217
+  size: 1280, 720
+  orig: 1280, 720
+  offset: 0, 0
+  index: -1
+Background/fjell1
+  rotate: false
+  xy: 2, 489
+  size: 726, 726
+  orig: 726, 726
+  offset: 0, 0
+  index: -1
+Background/fjell2
+  rotate: false
+  xy: 1284, 1211
+  size: 726, 726
+  orig: 726, 726
+  offset: 0, 0
+  index: -1
+Background/fjell3
+  rotate: false
+  xy: 730, 609
+  size: 719, 600
+  orig: 719, 600
+  offset: 0, 0
+  index: -1
+Background/fjell4
+  rotate: false
+  xy: 2, 2
+  size: 720, 485
+  orig: 720, 485
+  offset: 0, 0
+  index: -1
+Background/tre1
+  rotate: false
+  xy: 1451, 869
+  size: 224, 340
+  orig: 224, 340
+  offset: 0, 0
+  index: -1
+Background/tre2
+  rotate: false
+  xy: 1677, 869
+  size: 224, 340
+  orig: 224, 340
+  offset: 0, 0
+  index: -1
+Background/tre3
+  rotate: false
+  xy: 1451, 527
+  size: 224, 340
+  orig: 224, 340
+  offset: 0, 0
+  index: -1
+Background/tre4
+  rotate: false
+  xy: 1677, 527
+  size: 224, 340
+  orig: 224, 340
+  offset: 0, 0
+  index: -1
+
+pack2.png
+size: 2048,1024
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Main/gate
+  rotate: false
+  xy: 1166, 639
+  size: 560, 280
+  orig: 560, 280
+  offset: 0, 0
+  index: -1
+Main/mannbarschwein
+  rotate: false
+  xy: 964, 921
+  size: 1080, 90
+  orig: 1080, 90
+  offset: 0, 0
+  index: -1
+Main/obstacle1
+  rotate: false
+  xy: 2, 2
+  size: 45, 45
+  orig: 45, 45
+  offset: 0, 0
+  index: -1
+Main/obstacle2
+  rotate: false
+  xy: 1166, 230
+  size: 45, 45
+  orig: 45, 45
+  offset: 0, 0
+  index: -1
+Main/partikkel1
+  rotate: false
+  xy: 1046, 165
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+Main/partikkel2
+  rotate: false
+  xy: 1728, 805
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+Main/partikkel3
+  rotate: false
+  xy: 1810, 887
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+Main/partikkelBlod
+  rotate: false
+  xy: 1528, 523
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+Main/pickup1
+  rotate: false
+  xy: 964, 117
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1
+Main/pickup2
+  rotate: false
+  xy: 1728, 839
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1
+Main/pickup3
+  rotate: false
+  xy: 1528, 557
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1
+Main/pillar
+  rotate: false
+  xy: 964, 199
+  size: 200, 720
+  orig: 200, 720
+  offset: 0, 0
+  index: -1
+Main/skog
+  rotate: false
+  xy: 2, 531
+  size: 960, 480
+  orig: 960, 480
+  offset: 0, 0
+  index: -1
+Main/sky
+  rotate: false
+  xy: 1166, 277
+  size: 360, 360
+  orig: 360, 360
+  offset: 0, 0
+  index: -1
+Main/sump4
+  rotate: false
+  xy: 2, 49
+  size: 960, 480
+  orig: 960, 480
+  offset: 0, 0
+  index: -1
+Main/tile1
+  rotate: false
+  xy: 964, 70
+  size: 45, 45
+  orig: 45, 45
+  offset: 0, 0
+  index: -1
+
+pack3.png
+size: 2048,2048
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Intro/BAR
+  rotate: false
+  xy: 1284, 1072
+  size: 538, 364
+  orig: 538, 364
+  offset: 0, 0
+  index: -1
+Intro/MANN
+  rotate: false
+  xy: 1284, 1438
+  size: 704, 372
+  orig: 704, 372
+  offset: 0, 0
+  index: -1
+Intro/SCHWEIN
+  rotate: false
+  xy: 2, 2
+  size: 1109, 364
+  orig: 1109, 364
+  offset: 0, 0
+  index: -1
+Intro/bakgrunn1
+  rotate: false
+  xy: 2, 1090
+  size: 1280, 720
+  orig: 1280, 720
+  offset: 0, 0
+  index: -1
+Intro/bakgrunn2
+  rotate: false
+  xy: 2, 368
+  size: 1280, 720
+  orig: 1280, 720
+  offset: 0, 0
+  index: -1
