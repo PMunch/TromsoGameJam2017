@@ -6,7 +6,7 @@ type
   AnimationType* {.pure.} = enum pingpong, cycle
 
   Animation* = ref object
-    textureRegion: TextureRegion
+    textureRegion*: TextureRegion
     totalFrames:int
     frame: int
     timeSinceLastFrame: float

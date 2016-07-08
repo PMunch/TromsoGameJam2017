@@ -1,12 +1,17 @@
 import sdl2
 import sdl2.image
+import sdl2.haptic
 import basic2d
 import times
 import os
+import json
+import streams
 import gamelib.animation
 import gamelib.textureregion
 import gamelib.textureatlas
 import gamelib.logger
+import gamelib.files
+import gamelib.collisions
 
 type
   SDLException = object of Exception
@@ -16,7 +21,6 @@ type
   Character {.pure.} = enum man, bear, pig
 
   Player = ref object
-    #texture: TexturePtr
     animation: Animation
     pos: Point2D
     vel: Vector2D
@@ -28,6 +32,9 @@ type
     window: WindowPtr
     player: Player
     atlas: TextureAtlas
+    level: JsonNode
+    progress: float
+    obstacleTiles: seq[TextureRegion]
 
 const isMobile = defined(ios) or defined(android)
 
@@ -39,14 +46,14 @@ proc newPlayer(texture: TextureRegion): Player =
   new result
   #result.texture = texture
   result.animation = newAnimation(texture,4,10,AnimationType.pingpong)
-  result.pos = point2d(1022,600)
+  result.pos = point2d(1022,510)
   result.vel = vector2d(0,0)
   result.character = Character.man
 
 proc tick(player: Player, time: float) =
   player.animation.tick(time)
 
-proc newGame(renderer: RendererPtr, window: WindowPtr, atlas: TextureAtlas): Game =
+proc newGame(renderer: RendererPtr, window: WindowPtr, atlas: TextureAtlas, level: JsonNode): Game =
   new result
   result.renderer = renderer
   result.window = window
@@ -54,12 +61,17 @@ proc newGame(renderer: RendererPtr, window: WindowPtr, atlas: TextureAtlas): Gam
   var tex = atlas.getTextureRegion("Main/mannbarschwein")
   tex.region.w = (tex.region.w/3).cint
   result.player = newPlayer(tex)
+  result.level = level
+  result.obstacleTiles = @[
+    atlas.getTextureRegion("Main/tile1"),
+    atlas.getTextureRegion("Main/obstacle1"),
+    atlas.getTextureRegion("Main/obstacle2")]
 
 proc toInput(key: Scancode): Input =
   result=
     case key
-    of SDL_SCANCODE_SPACE: Input.jump
-    of SDL_SCANCODE_LSHIFT: Input.morph
+    of SDL_SCANCODE_UP: Input.jump
+    of SDL_SCANCODE_DOWN: Input.morph
     of SDL_SCANCODE_R: Input.restart
     of SDL_SCANCODE_Q: Input.quit
     else: Input.none
@@ -72,11 +84,11 @@ proc toInput(touch: TouchFingerEventPtr, window: WindowPtr): Input =
   when isMobile:
     let
       x = touch.x * w.cfloat
-      y = touch.y * h.cfloat
+      #y = touch.y * h.cfloat
   else:
     let
       x = touch.x
-      y = touch.y
+      #y = touch.y
 
   if x>w/2:
     return Input.jump
@@ -108,14 +120,34 @@ proc render(game: Game, time: float) =
   game.renderer.clear()
   # Show the result on screen
   game.renderer.render(game.player)
-  game.renderer.present()
-
   game.player.tick(time)
+  if game.inputs[Input.morph]:
+    game.inputs[Input.morph] = false
+    game.player.character = Character((ord(game.player.character)+1) mod 3)
+    if ord(game.player.character) == 0:
+      game.player.animation.textureRegion.region.x -= 90*4*2
+    else:
+      game.player.animation.textureRegion.region.x += 90*4
+  var
+    firstLine:float = (game.level["layer"][1]["width"].num - 30).float - game.progress
+    y: int = 0
+  for line in game.level["layer"][1]["data"]:
+    for tNum in (firstLine.int)..(firstLine.int + 29):
+      var tile:int = (line[tNum].num - 1).int
+      if tile != -1:
+        discard collides(rect(game.player.pos.x.cint,game.player.pos.y.cint,90,90),rect(((tNum.float - firstLine)*45).cint, (y*45).cint,45,45))
+        game.renderer.render(game.obstacleTiles[tile], ((tNum.float - firstLine)*45).cint, (y*45).cint)
+    y+=1
+  game.progress += time*10
+  if game.progress > 1200:
+    log "Game Over"
+
+  game.renderer.present()
 
 proc main =
   log "Starting SDL initialization"
 
-  sdlFailIf(not sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)):
+  sdlFailIf(not sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS or INIT_JOYSTICK or INIT_HAPTIC)):
     "SDL2 initialization failed"
 
   # defer blocks get called at the end of the procedure, even if an
@@ -157,14 +189,25 @@ proc main =
   # Set the default color to use for drawing
   renderer.setDrawColor(r = 110, g = 132, b = 174)
 
+  log "Haptic units: " & $numHaptics()
+  log mouseIsHaptic()
+  var haptic = hapticOpen(0)
+  log $cast[uint](haptic)
+  if haptic != nil:
+    discard haptic.rumblePlay(0.5,1000)
+
   log "Starting to load atlas"
-  var atlas = renderer.loadAtlas("pack.atlas")
-  log atlas.getTextureCount
   var
-    game = newGame(renderer, window,atlas)
+    levelStream = newStreamWithRWops(rwFromFile("level1.js", "rb"))
+    level = parseJson(levelStream,"level1.json")
+    atlas = renderer.loadAtlas("pack.atlas")
+    game = newGame(renderer, window,atlas,level)
     lastTime = epochTime()
     time = lastTime
   #  timeSinceLastTick:float = 0
+
+  levelStream.close()
+
 
   # Game loop, draws each frame
   while not game.inputs[Input.quit]:
