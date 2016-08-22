@@ -6,6 +6,7 @@ import times
 import os
 import json
 import streams
+import tables
 import gamelib.animation
 import gamelib.textureregion
 import gamelib.textureatlas
@@ -35,6 +36,8 @@ type
     level: JsonNode
     progress: float
     obstacleTiles: seq[TextureRegion]
+    backgrounds: seq[TextureRegion]
+    entityTextures: Table[string,seq[TextureRegion]]
 
 const isMobile = defined(ios) or defined(android)
 
@@ -47,25 +50,43 @@ proc newPlayer(texture: TextureRegion): Player =
   #result.texture = texture
   result.animation = newAnimation(texture,4,10,AnimationType.pingpong)
   result.pos = point2d(1022,510)
-  result.vel = vector2d(0,0)
+  result.vel = vector2d(0,350)
   result.character = Character.man
 
 proc tick(player: Player, time: float) =
   player.animation.tick(time)
+  player.pos.y += player.vel.y*time
 
 proc newGame(renderer: RendererPtr, window: WindowPtr, atlas: TextureAtlas, level: JsonNode): Game =
   new result
   result.renderer = renderer
   result.window = window
   result.atlas = atlas
-  var tex = atlas.getTextureRegion("Main/mannbarschwein")
-  tex.region.w = (tex.region.w/3).cint
-  result.player = newPlayer(tex)
+  var
+    tex = atlas.getTextureRegion("Main/mannbarschwein")
+    texCp = new TextureRegion
+  texCp.texture = tex.texture
+  texCp.region = tex.region
+  #tex.region.w = (tex.region.w/3).cint
+  result.player = newPlayer(texCp)
   result.level = level
   result.obstacleTiles = @[
     atlas.getTextureRegion("Main/tile1"),
     atlas.getTextureRegion("Main/obstacle1"),
     atlas.getTextureRegion("Main/obstacle2")]
+  result.backgrounds = @[
+    atlas.getTextureRegion("Intro/bakgrunn1"),
+    atlas.getTextureRegion("Intro/bakgrunn2"),
+    atlas.getTextureRegion("Background/bakgrunn3")]
+  result.entityTextures = initTable[string,seq[TextureRegion]]()
+  result.entityTextures.add("EntityPickup",@[
+    atlas.getTextureRegion("Main/pickup1"),
+    atlas.getTextureRegion("Main/pickup2"),
+    atlas.getTextureRegion("Main/pickup3")])
+  result.entityTextures.add("EntityGate",@[
+    atlas.getTextureRegion("Main/gate"),
+    atlas.getTextureRegion("Main/skog"),
+    atlas.getTextureRegion("Main/sump4")])
 
 proc toInput(key: Scancode): Input =
   result=
@@ -115,12 +136,85 @@ proc handleInput(game: Game) =
 proc render(renderer: RendererPtr, player: Player) =
   renderer.render(player.animation,player.pos)
 
-proc render(game: Game, time: float) =
+proc render(game: var Game, time: float) =
   # Draw over all drawings of the last frame with the default color
   game.renderer.clear()
   # Show the result on screen
+  game.renderer.render(game.backgrounds[game.player.character.int],0,0)
+
+  for entity in game.level["entities"]:
+    if
+      entity["type"].str == "EntityGate" and
+      entity["x"].num+480 > (1200*45)-(game.progress*45 + 1280).int and
+      entity["x"].num-480 < (1200*45-game.progress*45).int:
+        var halfWidth = (game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w/2).cint
+        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w -= halfWidth
+        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.x += halfWidth
+        game.renderer.render(
+          game.entityTextures[entity["type"].str][int(entity["settings"]["particleType"].num-1)],
+          1200+(entity["x"].num-(1200*45-game.progress*45).int+halfWidth).cint,
+          entity["y"].num.cint)
+        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w += halfWidth
+        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.x -= halfWidth
+
   game.renderer.render(game.player)
   game.player.tick(time)
+
+  var
+    firstLine:float = (game.level["layer"][1]["width"].num - 30).float - game.progress
+    y: int = 0
+    grounded = false
+  for line in game.level["layer"][1]["data"]:
+    for tNum in (firstLine.int)..(firstLine.int + 29):
+      var tile:int = (line[tNum].num - 1).int
+      if tile != -1:
+        if tNum > firstLine.int + 20:
+          let collision = collides(rect(game.player.pos.x.cint,game.player.pos.y.cint,90,90),rect(((tNum.float - firstLine)*45).cint, (y*45).cint,45,45))
+          if collision != nil:
+            if collision.direction == Direction.southwest or
+               collision.direction == Direction.south or
+               collision.direction == Direction.southeast:
+              if tile == 2:
+                game = newGame(game.renderer, game.window,game.atlas,game.level)
+              grounded = true
+              if game.player.vel.y > 0:
+                game.player.pos.y -= collision.rect.h.float
+                game.player.vel.y = 0
+            elif collision.direction == Direction.northwest or
+                 collision.direction == Direction.north or
+                 collision.direction == Direction.northeast:
+              if game.player.vel.y < 0:
+                game.player.vel.y = 0
+                game.player.pos.y += collision.rect.h.float+1
+              else:
+                game = newGame(game.renderer, game.window,game.atlas,game.level)
+            else:
+              game = newGame(game.renderer, game.window,game.atlas,game.level)
+          #game.renderer.setDrawColor(r = 174, g = 0, b = 0)
+          #var r = rect(((tNum.float - firstLine)*45).cint, (y*45).cint,45,45)
+          #discard game.renderer.drawRect(r)
+          #game.renderer.setDrawColor(r = 110, g = 132, b = 174)
+        game.renderer.render(game.obstacleTiles[tile], ((tNum.float - firstLine)*45).cint, (y*45).cint)
+    y+=1
+  for entity in game.level["entities"]:
+    if
+      entity["type"].str != "EntityPlayer" and entity["type"].str != "EntityRocket" and
+      entity["x"].num+480 > (1200*45)-(game.progress*45 + 1280).int and
+      entity["x"].num-480 < (1200*45-game.progress*45).int:
+      if entity["type"].str=="EntityPickup":
+        game.renderer.render(
+          game.entityTextures[entity["type"].str][int(entity["settings"]["particleType"].num-1)],
+          1200+(entity["x"].num-(1200*45-game.progress*45).int).cint,
+          entity["y"].num.cint)
+      else:
+        var halfWidth = (game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w/2).cint
+        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w -= halfWidth
+        game.renderer.render(
+          game.entityTextures[entity["type"].str][int(entity["settings"]["particleType"].num-1)],
+          1200+(entity["x"].num-(1200*45-game.progress*45).int).cint,
+          entity["y"].num.cint)
+        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w += halfWidth
+
   if game.inputs[Input.morph]:
     game.inputs[Input.morph] = false
     game.player.character = Character((ord(game.player.character)+1) mod 3)
@@ -128,17 +222,16 @@ proc render(game: Game, time: float) =
       game.player.animation.textureRegion.region.x -= 90*4*2
     else:
       game.player.animation.textureRegion.region.x += 90*4
-  var
-    firstLine:float = (game.level["layer"][1]["width"].num - 30).float - game.progress
-    y: int = 0
-  for line in game.level["layer"][1]["data"]:
-    for tNum in (firstLine.int)..(firstLine.int + 29):
-      var tile:int = (line[tNum].num - 1).int
-      if tile != -1:
-        discard collides(rect(game.player.pos.x.cint,game.player.pos.y.cint,90,90),rect(((tNum.float - firstLine)*45).cint, (y*45).cint,45,45))
-        game.renderer.render(game.obstacleTiles[tile], ((tNum.float - firstLine)*45).cint, (y*45).cint)
-    y+=1
-  game.progress += time*10
+  if game.inputs[Input.jump]:
+    if grounded:
+      game.inputs[Input.jump] = false
+      game.player.vel.y = -800
+      grounded = false
+
+  if not grounded:
+    game.player.vel.y += 35
+
+  game.progress += time*12
   if game.progress > 1200:
     log "Game Over"
 
@@ -201,10 +294,18 @@ proc main =
     levelStream = newStreamWithRWops(rwFromFile("level1.js", "rb"))
     level = parseJson(levelStream,"level1.json")
     atlas = renderer.loadAtlas("pack.atlas")
-    game = newGame(renderer, window,atlas,level)
     lastTime = epochTime()
     time = lastTime
-  #  timeSinceLastTick:float = 0
+    tex = atlas.getTextureRegion("Main/mannbarschwein")
+  tex.region.w = (tex.region.w/3).cint
+
+  for gate in @[
+    atlas.getTextureRegion("Main/gate"),
+    atlas.getTextureRegion("Main/skog"),
+    atlas.getTextureRegion("Main/sump4")]:
+    gate.region.w = (gate.region.w/2).cint
+  var
+    game = newGame(renderer, window,atlas,level)
 
   levelStream.close()
 

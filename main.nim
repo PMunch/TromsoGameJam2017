@@ -1,6 +1,7 @@
 #!/usr/local/bin/nim c -r
 
 import src.application
+#import src.collisiontest
 import macros
 
 {.emit: """
@@ -43,5 +44,3 @@ elif defined(macosx):
 
 when defined(macosx) or defined(ios):
     useFrameworks("AudioToolbox", "CoreAudio", "CoreGraphics", "QuartzCore")
-
-
