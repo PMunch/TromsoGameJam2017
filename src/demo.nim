@@ -1,18 +1,20 @@
+import "../logger"
 import sdl2
 import sdl2.image
-import basic2d
+import sdl2.ttf
 import times
 import gamelib.animation
 import gamelib.textureregion
+import gamelib.ninepatch
 import gamelib.textureatlas
-import gamelib.logger
 import gamelib.files
 import gamelib.collisions
+import gamelib.text
 
 type
   SDLException = object of Exception
 
-const isMobile = false
+const isMobile = defined(ios) or defined(android)
 
 template sdlFailIf(cond: typed, reason: string) =
   if cond: raise SDLException.newException(
@@ -50,6 +52,9 @@ proc main =
   sdlFailIf window.isNil: "Window could not be created"
   defer: window.destroy()
 
+  sdlFailIf(ttfInit() == SdlError): "SDL2 TTF initialization failed"
+  defer: ttfQuit()
+
   let renderer = window.createRenderer(index = -1,
     flags = Renderer_Accelerated or Renderer_PresentVsync)
   sdlFailIf renderer.isNil: "Renderer could not be created"
@@ -60,20 +65,28 @@ proc main =
       w,h:cint
     window.getSize(w,h)
     renderer.setScale(w/1280,h/720)
-  # Set the default color to use for drawing
 
   var
-    #atlas = renderer.loadAtlas("pack.atlas")
+    atlas = renderer.loadAtlas("pack.atlas")
     lastTime = epochTime()
     time = lastTime
+    tick = 0.0
     ended = false
+    r1 = rect(200,300,100,100)
+    r2 = rect(200,300,50,50)
+    anim = atlas.getAnimation("frame")
+    stat = atlas.getTextureRegion("treeline")
+    ninepatch = atlas.getNinePatch("ninepatch_bubble")
+    ninepatchRegion = rect(700,300,150,300)
+    nph = 150.0
+    npw = 300.0
+    grow = true
+    font = openFont("DejaVuSans.ttf", 28)
+    text = renderer.newText(font,"Text",color(0,0,0,255),TextBlendMode.blended)
 
-  # Game loop, draws each frame
-  var
-    r1 = rect(300,300,100,100)
-    r2 = rect(300,300,50,50)
   while not ended:
     time = epochTime()
+    tick = time - lastTime
     var event = defaultEvent
     while pollEvent(event):
       case event.kind
@@ -93,7 +106,29 @@ proc main =
     discard renderer.drawRect(r2)
     renderer.setDrawColor(r = 174, g = 0, b = 0)
     discard renderer.drawRect(collision.rect)
+    if collision == nil:
+      text.setText("No collision")
+    else:
+      text.setText("Collision direction: " & $collision.direction)
+    anim.tick(tick)
+    renderer.render(anim,400,300)
+    renderer.render(stat,500,300)
+    ninepatchRegion.w = npw.cint
+    ninepatchRegion.h = nph.cint
+    renderer.renderForRegion(ninepatch,ninepatchRegion)
+    discard renderer.drawRect(ninepatchRegion)
+    renderer.render(text,20,20)
     renderer.present()
+    if grow:
+      nph += 10*(tick)
+      npw += 40*(tick)
+    else:
+      nph -= 10*(tick)
+      npw -= 40*(tick)
+    if npw>450:
+      grow = false
+    elif npw<300:
+      grow = true
     lastTime = time
 
 main()

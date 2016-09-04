@@ -1,6 +1,8 @@
 #!/usr/local/bin/nim c -r
 
-import src.application
+import src.demo
+#import src.newpacktest
+#import src.application
 #import src.collisiontest
 import macros
 

@@ -1,5 +1,3 @@
-This repo is discontinued in favour of [nimx](https://github.com/yglukhov/nimx). No guarantees that it will work with latest versions of everything.
-
 # Cross-platform [SDL](http://libsdl.org) project in [Nim](http://nim-lang.org)
 
 This is a project template that builds and runs on different target platforms.
@@ -27,4 +25,3 @@ $ nake help
 
 ## Feedback
 Please feel free to submit pull requests, bug reports, etc.
-

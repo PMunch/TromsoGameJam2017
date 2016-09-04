@@ -4,6 +4,7 @@ import basic2d
 import times
 import gamelib.animation
 import gamelib.textureregion
+import gamelib.ninepatch
 import gamelib.textureatlas
 import gamelib.logger
 import gamelib.files
@@ -61,9 +62,16 @@ proc main =
     window.getSize(w,h)
     renderer.setScale(w/1280,h/720)
   # Set the default color to use for drawing
-
+  #[var t = @[0]
+  t.insert(2,1)
+  t.insert(5,min(5,t.len))
+  echo t]#
   var
-    #atlas = renderer.loadAtlas("pack.atlas")
+    atlas = renderer.loadAtlas("ninepack.atlas")
+    #gate = atlas.getTextureRegion("tree_dead")
+    #trollanim = atlas.getAnimation("frame")
+    np = atlas.getNinePatch("ninepatch_bubble")
+    #trollanim = newAnimation(bigtroll,18,10,AnimationType.pingpong)
     lastTime = epochTime()
     time = lastTime
     ended = false
@@ -71,7 +79,7 @@ proc main =
   # Game loop, draws each frame
   var
     r1 = rect(300,300,100,100)
-    r2 = rect(300,300,50,50)
+    r2 = rect(200,200,300,200)
   while not ended:
     time = epochTime()
     var event = defaultEvent
@@ -80,19 +88,63 @@ proc main =
       of QuitEvent:
         ended = true
       of MouseMotion:
-        r2.x = event.evMouseMotion.x
-        r2.y = event.evMouseMotion.y
+        r2.w = event.evMouseMotion.x - 200
+        r2.h = event.evMouseMotion.y - 200
       else:
         discard
-    var collision = collides(r1,r2)
+    #var collision = collides(r1,r2)
     renderer.setDrawColor(r = 255, g = 255, b = 255)
     renderer.clear()
-    renderer.setDrawColor(r = 0, g = 0, b = 174)
+    #[renderer.setDrawColor(r = 0, g = 0, b = 174)
     discard renderer.drawRect(r1)
     renderer.setDrawColor(r = 0, g = 174, b = 0)
     discard renderer.drawRect(r2)
     renderer.setDrawColor(r = 174, g = 0, b = 0)
     discard renderer.drawRect(collision.rect)
+    ]#
+    renderer.renderForRegion(np,200,200,r2.w,r2.h)
+    #var r = rect(200,200,300,200)
+    renderer.setDrawColor(r = 0, g = 174, b = 0)
+    discard renderer.drawRect(r2)
+    #[renderer.setDrawColor(r = 0, g = 174, b = 0)
+    var rect = np.cornerTL
+    rect.x -= np.region.x - 200
+    rect.y -= np.region.y - 200
+    discard renderer.drawRect(rect)
+    rect = np.cornerTR
+    rect.x -= np.region.x - 200
+    rect.y -= np.region.y - 200
+    discard renderer.drawRect(rect)
+    rect = np.cornerBR
+    rect.x -= np.region.x - 200
+    rect.y -= np.region.y - 200
+    discard renderer.drawRect(rect)
+    rect = np.cornerBL
+    rect.x -= np.region.x - 200
+    rect.y -= np.region.y - 200
+    discard renderer.drawRect(rect)
+    renderer.setDrawColor(r = 0, g = 0, b = 174)
+    rect = np.centerT
+    rect.x -= np.region.x - 200
+    rect.y -= np.region.y - 200
+    discard renderer.drawRect(rect)
+    rect = np.centerR
+    rect.x -= np.region.x - 200
+    rect.y -= np.region.y - 200
+    discard renderer.drawRect(rect)
+    rect = np.centerL
+    rect.x -= np.region.x - 200
+    rect.y -= np.region.y - 200
+    discard renderer.drawRect(rect)
+    rect = np.centerB
+    rect.x -= np.region.x - 200
+    rect.y -= np.region.y - 200
+    discard renderer.drawRect(rect)
+    renderer.setDrawColor(r = 174, g = 0, b = 0)
+    rect = np.center
+    rect.x -= np.region.x - 200
+    rect.y -= np.region.y - 200
+    discard renderer.drawRect(rect)]#
     renderer.present()
     lastTime = time
 

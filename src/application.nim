@@ -142,24 +142,6 @@ proc render(game: var Game, time: float) =
   # Show the result on screen
   game.renderer.render(game.backgrounds[game.player.character.int],0,0)
 
-  for entity in game.level["entities"]:
-    if
-      entity["type"].str == "EntityGate" and
-      entity["x"].num+480 > (1200*45)-(game.progress*45 + 1280).int and
-      entity["x"].num-480 < (1200*45-game.progress*45).int:
-        var halfWidth = (game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w/2).cint
-        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w -= halfWidth
-        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.x += halfWidth
-        game.renderer.render(
-          game.entityTextures[entity["type"].str][int(entity["settings"]["particleType"].num-1)],
-          1200+(entity["x"].num-(1200*45-game.progress*45).int+halfWidth).cint,
-          entity["y"].num.cint)
-        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w += halfWidth
-        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.x -= halfWidth
-
-  game.renderer.render(game.player)
-  game.player.tick(time)
-
   var
     firstLine:float = (game.level["layer"][1]["width"].num - 30).float - game.progress
     y: int = 0
@@ -196,32 +178,60 @@ proc render(game: var Game, time: float) =
           #game.renderer.setDrawColor(r = 110, g = 132, b = 174)
         game.renderer.render(game.obstacleTiles[tile], ((tNum.float - firstLine)*45).cint, (y*45).cint)
     y+=1
+
   for entity in game.level["entities"]:
+    if entity["type"].str == "EntityGate":
+      let
+        entityX = 1200+(entity["x"].num-(1200*45-game.progress*45).int).cint
+        entityY = entity["y"].num.cint
+        tex = game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)]
+      if entityX + 480 > 0 and entityX < 1280:
+          var halfWidth = (tex.region.w/2).cint
+          tex.region.w -= halfWidth
+          tex.region.x += halfWidth
+          game.renderer.render(
+            tex,
+            entityX+halfWidth,
+            entityY)
+          tex.region.w += halfWidth
+          tex.region.x -= halfWidth
+
+  game.renderer.render(game.player)
+  game.player.tick(time)
+
+  for entity in game.level["entities"]:
+    let
+      entityX = 1200+(entity["x"].num-(1200*45-game.progress*45).int).cint
+      entityY = entity["y"].num.cint
     if
       entity["type"].str != "EntityPlayer" and entity["type"].str != "EntityRocket" and
-      entity["x"].num+480 > (1200*45)-(game.progress*45 + 1280).int and
-      entity["x"].num-480 < (1200*45-game.progress*45).int:
+      entityX + 480 > 0 and entityX < 1280:
       if entity["type"].str=="EntityPickup":
         game.renderer.render(
           game.entityTextures[entity["type"].str][int(entity["settings"]["particleType"].num-1)],
-          1200+(entity["x"].num-(1200*45-game.progress*45).int).cint,
-          entity["y"].num.cint)
+          entityX,
+          entityY)
+        if collides(rect(game.player.pos.x.cint+10,game.player.pos.y.cint+10,70,70),rect(entityX+10,
+          entityY+10,60,60)) != nil:
+          echo "Collision"
+          entity["x"].num = 0
       else:
-        var halfWidth = (game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w/2).cint
-        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w -= halfWidth
+        let tex = game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)]
+        var halfWidth = (tex.region.w/2).cint
+        tex.region.w -= halfWidth
         game.renderer.render(
-          game.entityTextures[entity["type"].str][int(entity["settings"]["particleType"].num-1)],
-          1200+(entity["x"].num-(1200*45-game.progress*45).int).cint,
-          entity["y"].num.cint)
-        game.entityTextures["EntityGate"][int(entity["settings"]["particleType"].num-1)].region.w += halfWidth
+          tex,
+          entityX,
+          entityY)
+        tex.region.w += halfWidth
 
   if game.inputs[Input.morph]:
     game.inputs[Input.morph] = false
     game.player.character = Character((ord(game.player.character)+1) mod 3)
     if ord(game.player.character) == 0:
-      game.player.animation.textureRegion.region.x -= 90*4*2
+      game.player.animation.textureRegions[0].region.x -= 90*4*2
     else:
-      game.player.animation.textureRegion.region.x += 90*4
+      game.player.animation.textureRegions[0].region.x += 90*4
   if game.inputs[Input.jump]:
     if grounded:
       game.inputs[Input.jump] = false
