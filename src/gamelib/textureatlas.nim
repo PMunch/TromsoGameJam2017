@@ -48,17 +48,29 @@ proc getNinePatch*(atlas: TextureAtlas, name: string): NinePatch =
 proc getValue(line:string, field:string): string =
   return line[2+field.len .. line.high]
 
-proc addCurrent(atlas:TextureAtlas, texture:TexturePtr, ninePatch: bool, curName:string,  curRegion:var Rect, curRotation:bool, curSize: Rect, curOffset: Point, curIndex: cint, curNineSplit: Lengths, curNinePad: Lengths) =
+proc addCurrent(atlas:TextureAtlas, texture:TexturePtr, ninePatch: bool, curName:string,  curRegion:var Rect, curRotation:bool, curSize: var Rect, curOffset: var Point, curIndex: cint, curNineSplit: Lengths, curNinePad: Lengths) =
+  
+
+  curOffset.y = curSize.y-curRegion.h-curOffset.y
+
   if curRotation:
     let tmpH = curRegion.h
     curRegion.h = curRegion.w
     curRegion.w = tmpH
+    let tmpS = curSize.y
+    curSize.y = curSize.x
+    curSize.x = tmpS
+    let tmpX = curOffset.x
+    curOffset.x = curOffset.y
+    curOffset.y = tmpX
+    curOffset.y = curSize.y-curRegion.h-curOffset.y
+
+
   if curIndex == -1 and ninePatch == false:
     atlas.regions[curName]= newTextureRegion(texture,curRegion,curSize,curOffset,curRotation)
   elif ninePatch == false:
     if atlas.animations.hasKey(curName):
       atlas.animations[curName].textureRegions.insert(newTextureRegion(texture,curRegion,curSize,curOffset,curRotation),min(curIndex,atlas.animations[curName].textureRegions.len))
-      atlas.animations[curName].totalFrames+=1
     else:
       atlas.animations[curName]=newAnimation(@[newTextureRegion(texture,curRegion,curSize,curOffset,curRotation)])
   else:

@@ -7,9 +7,10 @@ import gamelib.animation
 import gamelib.textureregion
 import gamelib.ninepatch
 import gamelib.textureatlas
-import gamelib.files
 import gamelib.collisions
 import gamelib.text
+
+converter intToCint(x: int): cint = x.cint
 
 type
   SDLException = object of Exception
@@ -30,7 +31,7 @@ proc main =
   # exception has been thrown
   defer: sdl2.quit()
 
-  sdlFailIf(not setHint("SDL_RENDER_SCALE_QUALITY", "2")):
+  sdlFailIf(not setHint("SDL_RENDER_SCALE_QUALITY", "0")):
     "Linear texture filtering could not be enabled"
 
   const imgFlags: cint = IMG_INIT_PNG
@@ -74,15 +75,23 @@ proc main =
     ended = false
     r1 = rect(200,300,100,100)
     r2 = rect(200,300,50,50)
-    anim = atlas.getAnimation("frame")
-    stat = atlas.getTextureRegion("treeline")
+    anim = atlas.getAnimation("king_walk")
+    animStrip = atlas.getTextureRegion("beggar")
+    kingstand = atlas.getTextureRegion("king_stand")
+    animStrip2 = atlas.getTextureRegion("citizen")
+    anim2 = newAnimation(animStrip, 11, 12, AnimationType.pingpong)
+    anim3 = newAnimation(animStrip2, 8, 12, AnimationType.pingpong)
+    stat1 = atlas.getTextureRegion("citizen")
+    stat2 = atlas.getTextureRegion("beggar")
     ninepatch = atlas.getNinePatch("ninepatch_bubble")
+    tex = renderer.loadTexture("king_stand.png")
     ninepatchRegion = rect(700,300,150,300)
     nph = 150.0
     npw = 300.0
     grow = true
     font = openFont("DejaVuSans.ttf", 28)
     text = renderer.newText(font,"Text",color(0,0,0,255),TextBlendMode.blended)
+    rot = 0.0
 
   while not ended:
     time = epochTime()
@@ -111,12 +120,69 @@ proc main =
     else:
       text.setText("Collision direction: " & $collision.direction)
     anim.tick(tick)
-    renderer.render(anim,400,300)
-    renderer.render(stat,500,300)
+    anim2.tick(tick)
+    anim3.tick(tick)
+    var kingbox = rect(400,364,24,128)
+    renderer.render(kingstand,400,364,0,2,2)
+    renderer.render(anim,400,364,0,2,2)
+    renderer.drawRect(kingbox)
+    var pos = 400
+    for tex in anim.textureRegions:
+      renderer.render(tex,pos,300)
+      var box = rect(pos,300,64,64)
+      renderer.drawRect(box)
+      pos+=64
+    renderer.render(anim2,400,100,rot,2,2)
+    var r6 = rect(500,400,352,32)
+    #var r7 = rect(400,100,32,32)
+    renderer.render(stat1,500,200)
+    renderer.render(stat2,500,400)
+    var r10 = rect(500,200,256,32)
+    #var r11 = rect(700,300,96*2,160*2)
+    #renderer.render(stat1,700,300,0,2,2)
+    discard renderer.drawRect(r10)
+    discard renderer.drawRect(r6)
+    renderer.render(anim3,500,100,rot,2,2)
+    #discard renderer.drawRect(r7)
+    #renderer.render(stat2,300,450,2,2)
+    #var r3 = rect(500,300,192,320)
+    #var r5 = rect(500,300,96,160)
+    #var r4 = rect(300,450,128,128)
+    var
+      w = 54
+      h = 64
+      offset = point(0,0)
+      rotated = true
+      scaleX = 3
+      scaleY = 3
+    if rotated:
+      let s = scaleX
+      scaleX = scaleY
+      scaleY = s
+    var
+      src = rect(offset.x,offset.y,w,h)
+      #dst = rect(100+10*scaleX+(if rotated: h/2*scaleY.float-(w/2).float*scaleX.float else: 0).cint,100+offset.y*scaleY+(if rotated: (w/2).cint*scaleX-(h/2).cint*scaleY else: 0),(w-10)*scaleX,(h-offset.y)*scaleY)
+      r8 = rect(100,100,64*scaleX,64*scaleY)
+      #c = point(((w/2).cint-offset.x)*scaleX,((h/2).cint-offset.y)*scaleY)
+      dst = rect(130,100,54*3,64*3)
+      c = point(22*3,32*3)
+    #echo dst
+    renderer.copyEx(tex,
+      src,
+      dst,
+      angle = rot,
+      center = c.addr,
+      flip = SDL_FLIP_NONE)
+    renderer.drawRect(r8)
+    #discard renderer.drawRect(r4)
+    #discard renderer.drawRect(r5)
+    #discard renderer.drawRect(r6)
+    #discard renderer.drawRect(r7)
+    rot += 30*tick
     ninepatchRegion.w = npw.cint
     ninepatchRegion.h = nph.cint
-    renderer.renderForRegion(ninepatch,ninepatchRegion)
-    discard renderer.drawRect(ninepatchRegion)
+    #renderer.renderForRegion(ninepatch,ninepatchRegion)
+    #discard renderer.drawRect(ninepatchRegion)
     renderer.render(text,20,20)
     renderer.present()
     if grow:

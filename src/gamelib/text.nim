@@ -12,18 +12,27 @@ type
     font: FontPtr
     renderer: RendererPtr
     blendMode: TextBlendMode
+    maxWidth: uint32
 
-proc render* (renderer: RendererPtr, text:Text, x,y:cint) =
+proc render* (renderer: RendererPtr, text:Text, x,y:cint, rotation: float = 0, scaleX, scaleY: float = 1, alpha: uint8 = 255) =
   #var source = rect(0, 0, text.region.w, text.region.h)
-  var dest = rect(x, y, text.region.w, text.region.h)
+  var dest = rect(x, y, (text.region.w.float*scaleX).cint, (text.region.h.float*scaleY).cint)
 
-  renderer.copyEx(text.texture, text.region, dest, angle = 0.0, center = nil,
+  text.texture.setTextureAlphaMod(alpha)
+  renderer.copyEx(text.texture, text.region, dest, angle = rotation, center = nil,
                   flip = SDL_FLIP_NONE)
 
 proc createTexture(text:Text) =
+  #[var
+    str = @[""]
+    line = 0
+  for c in text.lastString:
+    if c == "\n":
+      line+=1
+    str[line] = str[line] & c]#
   let surface =
     if text.blendMode == TextBlendMode.blended:
-      text.font.renderUtf8Blended(text.lastString, text.color)
+      text.font.renderUtf8BlendedWrapped(text.lastString, text.color,text.maxWidth)
     elif text.blendMode == TextBlendMode.solid:
       text.font.renderUtf8Solid(text.lastString, text.color)
     elif text.blendMode == TextBlendMode.shaded:
@@ -53,17 +62,23 @@ proc setFont*(text:Text, font: FontPtr) =
     text.font = font
     text.createTexture
 
+proc setMaxWidth*(text:Text, maxWidth:uint32) =
+  if text.maxWidth != maxWidth:
+    text.maxWidth = maxWidth
+    text.createTexture
+
 proc setBackground*(text:Text, background: Color) =
   if text.background != background:
     text.background = background
     text.createTexture
 
-proc newText* (renderer: RendererPtr, font: FontPtr, text: string, color:Color, blendMode: TextBlendMode): Text =
+proc newText* (renderer: RendererPtr, font: FontPtr, text: string, color:Color = color(255,255,255,0), blendMode: TextBlendMode = TextBlendMode.solid, maxWidth: uint32 = uint32.high): Text =
   new result
   result.lastString = text
   result.font = font
   result.renderer = renderer
   result.color = color
+  result.maxWidth = maxWidth
   result.blendMode = blendMode
   if result.blendMode != TextBlendMode.shaded:
     result.createTexture

@@ -34,7 +34,7 @@ proc newNinePatch*(texture: TexturePtr, region: Rect, size: Rect, offset: Point,
   result.splitRows[2] = split.bottom
   result.pad = pad
 
-proc render*(renderer: RendererPtr, ninepatch: NinePatch, x,y,w,h: cint) =
+proc render*(renderer: RendererPtr, ninepatch: NinePatch, x,y,w,h: cint, alpha:uint8 = 255) =
   var
     src,dst: Rect
     scW, scH: cint = 0
@@ -42,6 +42,7 @@ proc render*(renderer: RendererPtr, ninepatch: NinePatch, x,y,w,h: cint) =
     growX = w - ninepatch.region.w
     growY = h - ninepatch.region.h
     col, row = 0
+  ninepatch.texture.setTextureAlphaMod(alpha)
   for c in ninepatch.splitColumns:
     for r in ninepatch.splitRows:
       src = rect(ninepatch.region.x+scW,ninepatch.region.y+scH,c,r)
@@ -61,12 +62,13 @@ proc render*(renderer: RendererPtr, ninepatch: NinePatch, x,y,w,h: cint) =
     row = 0
     scH = 0
     dcH = 0
+  ninepatch.texture.setTextureAlphaMod(255)
 
-proc render*(renderer: RendererPtr, ninepatch: NinePatch, region:Rect) =
-  renderer.render(ninepatch,region.x,region.y,region.w,region.h)
-  
-proc renderForRegion*(renderer: RendererPtr, ninepatch: NinePatch, x,y,w,h: cint) =
-  renderer.render(ninepatch,x-ninepatch.pad.left,y-ninepatch.pad.top,w+ninepatch.pad.left+ninepatch.pad.right,h+ninepatch.pad.top+ninepatch.pad.bottom)
+template render*(renderer: RendererPtr, ninepatch: NinePatch, region:Rect, alpha:uint8 = 255) =
+  renderer.render(ninepatch,region.x,region.y,region.w,region.h,alpha)
 
-proc renderForRegion*(renderer: RendererPtr, ninepatch: NinePatch, region:Rect) =
-  renderer.render(ninepatch,region.x-ninepatch.pad.left,region.y-ninepatch.pad.top,region.w+ninepatch.pad.left+ninepatch.pad.right,region.h+ninepatch.pad.top+ninepatch.pad.bottom)
+template renderForRegion*(renderer: RendererPtr, ninepatch: NinePatch, x,y,w,h: cint, alpha:uint8 = 255) =
+  renderer.render(ninepatch,x-ninepatch.pad.left,y-ninepatch.pad.top,w+ninepatch.pad.left+ninepatch.pad.right,h+ninepatch.pad.top+ninepatch.pad.bottom,alpha)
+
+template renderForRegion*(renderer: RendererPtr, ninepatch: NinePatch, region:Rect, alpha:uint8 = 255) =
+  renderer.render(ninepatch,region.x-ninepatch.pad.left,region.y-ninepatch.pad.top,region.w+ninepatch.pad.left+ninepatch.pad.right,region.h+ninepatch.pad.top+ninepatch.pad.bottom,alpha)

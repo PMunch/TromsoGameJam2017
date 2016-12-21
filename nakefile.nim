@@ -5,13 +5,14 @@ let appName = "MyGame"
 let bundleId = "com.mycompany.MyGame"
 let javaPackageId = "com.mycompany.MyGame"
 
-let androidSdk = "~/Libraries/android-sdk-linux"
-let androidNdk = "~/Libraries/android-ndk-r12"
-let sdlRoot = "~/Libraries/SDL2-2.0.4"
+let androidSdk = "~/HDD_storage/AndroidSDK/android-sdk-linux"
+let androidNdk = "~/HDD_storage/AndroidSDK/android-ndk-r12"
+let sdlRoot = "~/Programming/SDL2-2.0.4"
+let sdlTtfRoot = "~/Programming/SDL2_ttf-2.0.14"
 
 # This should point to the Nim include dir, where nimbase.h resides.
 # Needed for android only
-let nimIncludeDir = "/usr/lib/nim"
+let nimIncludeDir = "/home/peter/Projects/Nim/lib/" # "/usr/lib/nim"
 
 let macOSSDKVersion = "10.11"
 let macOSMinVersion = "10.6"
@@ -60,6 +61,7 @@ proc symLink(source, destination: string) =
 proc createSDLIncludeLink(dir: string) =
     createDir dir
     symLink(sdlRoot/"include", dir/"SDL2")
+    symLink(sdlTtfRoot/"/external/freetype-2.4.12/include", dir/"SDL2_ttf")
 
 proc runAppInSimulator() =
     var waitForDebugger = "--wait-for-debugger"
@@ -97,6 +99,9 @@ proc makeAndroidBuildDir(): string =
         copyDir "android/template", buildDir
         symLink(sdlRoot/"src", buildDir/"jni/SDL/src")
         symLink(sdlRoot/"include", buildDir/"jni/SDL/include")
+        echo sdlTtfRoot/"external/freetype-2.4.12/src"
+        symLink(sdlTtfRoot/"external/freetype-2.4.12/src", buildDir/"jni/SDL_ttf/external/freetype-2.4.12/src")
+        symLink(sdlTtfRoot/"external/freetype-2.4.12/include", buildDir/"jni/SDL_ttf/external/freetype-2.4.12/include")
         createSDLIncludeLink(buildDir/"jni/src")
 
         let mainActivityPath = javaPackageId.replace(".", "/")
