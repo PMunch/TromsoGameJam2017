@@ -111,11 +111,14 @@ proc main =
   sdlFailIf renderer.isNil: "Renderer could not be created"
   defer: renderer.destroy()
 
-  #when isMobile:
-  var
-    w,h:cint
-  window.getSize(w,h)
-  renderer.setScale(w/1920,h/1080)
+  when isMobile:
+    var
+      w, h:cint
+    window.getSize(w,h)
+    renderer.setScale(w/1920,h/1080)
+  else:
+    if renderer.setLogicalSize(1920,1080) < 0:
+      echo getError()
 
   type
     Plug = ref object
