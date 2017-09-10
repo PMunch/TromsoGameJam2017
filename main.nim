@@ -1,6 +1,7 @@
 #!/usr/local/bin/nim c -r
 
-import src.storygame
+#import src.storygame
+import src.sgtest
 #import src.demo
 #import src.newpacktest
 #import src.application

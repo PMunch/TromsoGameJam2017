@@ -1,8 +1,23 @@
+## A texture region is a simple construct that consists of a texture and a
+## region. The region specifies the area in the texture that will be drawn by
+## the render funciton. Texture regions are especially practical when dealing
+## with animations and texture atlases. This implementation also supports
+## textures with regions that are rotated and offset (to accomodate the texture
+## atlas). When scaling images the x and y position to render at is the upper
+## left corner, when using negative scale the image is simply flipped meaning
+## that a negative scale will still draw from x,y to x+w,y+h and not from x,y to
+## x-w,y-h as might be expected. The rotation is applied around the center of
+## the texture and x and y is located in what would be the top-left corner if it
+## weren't rotated. This means that drawing an image at the same x and y while
+## changing the rotation will make the sprite rotate in place around it's
+## center.
+
+
 import sdl2
-#import math
 
 type
   TextureRegion* = ref object
+    ## TextureRegion object
     texture*: TexturePtr
     region*: Rect
     size*: Rect
@@ -10,6 +25,8 @@ type
     rotated*: bool
 
 proc newTextureRegion*(texture: TexturePtr, region: Rect, size: Rect, offset: Point, rotated: bool):TextureRegion =
+  ## Create new texture region with all options, this is primarily used by the
+  ## TextureAtlas module
   new result
   result.texture = texture
   result.region = region
@@ -18,12 +35,19 @@ proc newTextureRegion*(texture: TexturePtr, region: Rect, size: Rect, offset: Po
   result.rotated = rotated
 
 template newTextureRegion*(texture: TexturePtr, region: Rect, size: Rect):TextureRegion =
+  ## Creates a new texture region
   newTextureRegion(texture,region,size,point(0,0),false)
 
 template newTextureRegion*(texture: TexturePtr, x,y,w,h: cint): TextureRegion =
+  ## Creates a new texture region
   newTextureRegion(texture,rect(x,y,w,h),rect(x,y,w,h))
 
+template newTextureRegion*(texture: TexturePtr): TextureRegion =
+  ## Creates a new texture region
+  newTextureRegion(texture,rect(0,0,texture.w,texture.h),rect(texture.x,texture.y,texture.w,texture.h))
+
 proc render*(renderer: RendererPtr, textureRegion: TextureRegion, x,y: cint, rotation:float = 0, scaleX, scaleY:float = 1, alpha: uint8 = 255) =
+  ## Render the texture region
   var
     scaleXmod = scaleX
     scaleYmod = scaleY
@@ -54,7 +78,6 @@ proc render*(renderer: RendererPtr, textureRegion: TextureRegion, x,y: cint, rot
       ((textureRegion.size.x/2)-offsetX.float)*sX,
       ((textureRegion.size.y/2)-offsetY.float)*sY
     )
-    #r = ((textureRegion.region.w-textureRegion.region.h)/2)
     r = (if textureRegion.rotated: c.x-c.y else: 0)
     ox = (if textureRegion.rotated: offsetY else: offsetX)
     oy = (if textureRegion.rotated: offsetX else: offsetY)
@@ -64,7 +87,6 @@ proc render*(renderer: RendererPtr, textureRegion: TextureRegion, x,y: cint, rot
       (textureRegion.region.w.float*sX).cint,
       (textureRegion.region.h.float*sY).cint)
 
-  #renderer.drawRect(dst)
   textureRegion.texture.setTextureAlphaMod(alpha)
   renderer.copyEx(textureRegion.texture,
     src,
@@ -73,28 +95,7 @@ proc render*(renderer: RendererPtr, textureRegion: TextureRegion, x,y: cint, rot
     center = c.addr,
     flip = (if scaleX<0: (if textureRegion.rotated: SDL_FLIP_VERTICAL else: SDL_FLIP_HORIZONTAL) else: SDL_FLIP_NONE) or (if scaleY<0: (if textureRegion.rotated: SDL_FLIP_HORIZONTAL else: SDL_FLIP_VERTICAL) else: SDL_FLIP_NONE))
   textureRegion.texture.setTextureAlphaMod(255)
-  #[var
-    dst = if textureRegion.rotated:
-        rect(
-        x+((textureRegion.offset.x.float+ -textureRegion.region.w/2+textureRegion.region.h/2).float*scaleX).cint,
-        y+((textureRegion.offset.y.float+ -textureRegion.region.w/2+textureRegion.region.h/2).float*scaleY).cint,
-        (textureRegion.region.w.float * scaleY).cint,
-        (textureRegion.region.h.float * scaleX).cint)
-      else:
-        rect(
-        x+(textureRegion.offset.x.float * scaleX).cint,
-        y+(textureRegion.offset.y.float * scaleY).cint,
-        (textureRegion.region.w.float * scaleX).cint,
-        (textureRegion.region.h.float * scaleY).cint)
-    ctr = if textureRegion.rotated:
-        point(((textureRegion.size.y/2-textureRegion.offset.x.float)*scaleX).cint,((textureRegion.size.x/2-textureRegion.offset.y.float)*scaleY).cint)
-      else: point(((textureRegion.size.x/2-textureRegion.offset.x.float)*scaleX).cint,((textureRegion.size.y/2-textureRegion.offset.y.float)*scaleY).cint)
-  renderer.copyEx(textureRegion.texture,
-    textureRegion.region,
-    dst,
-    angle = rotation + (if textureRegion.rotated: 90.0 else: 0.0),
-    center = ctr.addr,
-    flip = SDL_FLIP_NONE)]#
 
 template render*(renderer: RendererPtr, textureRegion: TextureRegion, pos: Point, rotation:float = 0, scaleX, scaleY: float = 1, alpha:uint8 = 255) =
+  ## Render the texture region at the specified point
   renderer.render(textureRegion, pos.x.cint, pos.y.cint, rotation, scaleX, scaleY,alpha)
