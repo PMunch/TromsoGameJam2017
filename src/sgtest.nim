@@ -56,6 +56,7 @@ var
   callBuzzerChannel: cint
 
 proc channelDone(channel: cint) {.cdecl.} =
+  setupForeignThreadGC()
   if pendingConversation != -1 and channel == callBuzzerChannel:
     pendingConversation = -1
     strikes -= 1
@@ -547,7 +548,7 @@ proc main =
       timeOfDay += tickLength
       if timeOfDay.int mod 60 != oldTimeOfDay.int mod 60:
         #echo $(timeOfDay.int div 60) & ":" & $(timeOfDay.int mod 60)
-        if days[day][nextConversation].startTime <= timeOfDay:
+        if nextConversation < days[day].len and days[day][nextConversation].startTime <= timeOfDay:
           #echo days[day][nextConversation].receiver
           pendingConversation = nextConversation
           nextConversation+=1
