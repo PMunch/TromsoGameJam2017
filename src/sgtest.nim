@@ -144,7 +144,11 @@ proc main =
   var
     titleTexture = newTextureRegion(renderer.loadTexture("art/TITLE.png"), 0, 0, 1920, 1080)
     background = newTextureRegion(renderer.loadTexture("art/SWITCHBOARDv3.png"), 0, 0, 1920, 1080)
-    dayreportbg = newTextureRegion(renderer.loadTexture("art/DOC day 1.PNG"), 0, 0, 795, 991)
+    dayreportbgs = [
+      newTextureRegion(renderer.loadTexture("art/DOC day 1.PNG"), 0, 0, 795, 991),
+      newTextureRegion(renderer.loadTexture("art/DOC day 2.PNG"), 0, 0, 795, 991),
+      newTextureRegion(renderer.loadTexture("art/DOC day 3.PNG"), 0, 0, 795, 991)
+    ]
     cutscenebg = newTextureRegion(renderer.loadTexture("art/Paper big.png"), 0, 0, 799, 988)
     submitbutton = newTextureRegion(renderer.loadTexture("submit.png"), 0, 0, 211, 125)
     continuebutton = newTextureRegion(renderer.loadTexture("continue.png"), 0, 0, 245, 142)
@@ -262,7 +266,7 @@ proc main =
     reports = [
       parseReportFile("day1report.txt"),
       parseReportFile("day2report.txt"),
-      parseReportFile("day2report.txt")
+      parseReportFile("day3report.txt")
     ]
     cutscenes = [
       parseReportFile("intro1.txt"),
@@ -271,7 +275,6 @@ proc main =
       parseReportFile("ending-win.txt"),
       parseReportFile("ending-lose.txt")
     ]
-    currentreport = reports[0]
   for kind, path in walkDir("day1"):
     if kind == pcFile:
       days[0].addConversations(parseConversationFile(path))
@@ -379,10 +382,10 @@ proc main =
             timeOfDay = 18'f*60 + 55
             stage = if stage == Introduction: Day1 elif stage == Cutscene1: Day2 elif stage == Cutscene2: Day3 else: Title
         if stage == Report1 or stage == Report2 or stage == Report3:
-          for option in currentreport.options:
+          for option in reports[(if stage == Report1: 0 elif stage == Report2: 1 else: 2)].options:
             var r = option.size
             r.x += 130 + reportX
-            r.y += 285 + reportY
+            r.y += 245 + reportY
             if point(mouseX, mouseY).within r:
               option.selected = (option.selected + 1) mod option.entries.len 
           if allSelected:
@@ -394,7 +397,7 @@ proc main =
               var
                 reportPoints = 0
                 seenBefore:seq[string] = @[]
-              for option in currentReport.options:
+              for option in reports[(if stage == Report1: 0 elif stage == Report2: 1 else: 2)].options:
                 if not seenBefore.contains option.entries[option.selected].text:
                   seenBefore.add option.entries[option.selected].text
                   if option.entries[option.selected].correct:
@@ -564,19 +567,19 @@ proc main =
       renderer.setDrawColor(0,0,0,150)
       var screen = rect(0,0,1920,1080)
       renderer.fillRect(screen)
-      renderer.render(dayreportbg, reportX, reportY)
+      renderer.render(dayreportbgs[(if stage == Report1: 0 elif stage == Report2: 1 else: 2)], reportX, reportY)
       var l = 0
-      for line in currentreport.lines:
+      for line in reports[(if stage == Report1: 0 elif stage == Report2: 1 else: 2)].lines:
         if line.len != 0:
           typewriterText.setColor color(0,0,0,255)
           typewriterText.setText(line)
-          renderer.render(typewriterText, 120 + reportX, 300+l*17 + reportY)
+          renderer.render(typewriterText, 120 + reportX, 260+l*17 + reportY)
         l+=1
       allSelected = true
-      for option in currentreport.options:
+      for option in reports[(if stage == Report1: 0 elif stage == Report2: 1 else: 2)].options:
         var r = option.size
         r.x += 130 + reportX
-        r.y += 285 + reportY
+        r.y += 245 + reportY
         renderer.setDrawColor(0,0,0,255)
         renderer.fillRect(r)
         if option.selected != -1:
