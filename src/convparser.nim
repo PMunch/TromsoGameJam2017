@@ -19,7 +19,7 @@ proc parseConversationFile*(name: string): seq[Conversation] =
     callerSpeaking: bool
     lineNum = 1
   for line in rwStream.lines:
-    if line.len == 0 or line.isSpaceAscii():
+    if line.allCharsInSet(Whitespace):
       continue
     if line.startsWith(" ") or line.startsWith("\t"):
       let sentences = line.split(";")

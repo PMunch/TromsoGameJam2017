@@ -44,7 +44,7 @@ proc render* (renderer: RendererPtr, text:Text, x,y:cint, rotation: float = 0, s
 proc createSurface(text: Text): SurfacePtr =
   result =
     if text.blendMode == TextBlendMode.blended:
-      text.font.renderUtf8BlendedWrapped(text.lastString, text.color,text.maxWidth)
+      text.font.renderUtf8BlendedWrapped(text.lastString, text.color, text.maxWidth)
     elif text.blendMode == TextBlendMode.solid:
       text.font.renderUtf8Solid(text.lastString, text.color)
     elif text.blendMode == TextBlendMode.shaded:
@@ -52,6 +52,7 @@ proc createSurface(text: Text): SurfacePtr =
     else:
       nil
   if result == nil:
+    echo $getError()
     echo "'" & $(text.lastString) & "'"
   text.region = rect(0,0,result.w,result.h)
 
@@ -103,15 +104,15 @@ proc setBackground*(text:Text, background: Color) =
     text.background = background
     text.refreshData
 
-proc newText* (renderer: RendererPtr, font: FontPtr, text: string, color:Color = color(255,255,255,0), blendMode: TextBlendMode = TextBlendMode.solid, maxWidth: uint32 = uint32.high, hasTexture: bool = true): Text =
+proc newText* (renderer: RendererPtr, font: FontPtr, text: string, color:Color = color(255,255,255,0), blendMode: TextBlendMode = TextBlendMode.solid, maxWidth: uint32 = 10_000, hasTexture: bool = true): Text =
   ## Creates a new text object.
-  new result
-  result.lastString = text
-  result.font = font
-  result.renderer = renderer
-  result.color = color
-  result.maxWidth = maxWidth
-  result.blendMode = blendMode
-  result.hasTexture = hasTexture
+  result = Text(
+    hasTexture: hasTexture,
+    lastString: text,
+    font: font,
+    renderer: renderer,
+    color: color,
+    maxWidth: maxWidth,
+    blendMode: blendMode)
   if result.blendMode != TextBlendMode.shaded:
     result.refreshData

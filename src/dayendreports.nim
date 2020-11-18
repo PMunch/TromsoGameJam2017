@@ -29,13 +29,14 @@ proc parseReportFile*(name: string): Report =
     lastLen = 0
     currentOption: Option #tuple[options: seq[tuple[text: string, correct: bool]], selected: int, size: Rect]
   for line in rwStream.lines:
+    if line.len == 0: continue
     if line[0] != '#' and isOption == false:
       if not wasOption:
         result.lines.add line
       else:
         wasOption = false
         result.lines[result.lines.high] = result.lines[result.lines.high] & line
-    elif line.len == 0 or line.isSpaceAscii:
+    elif line.allCharsInSet(Whitespace):
       isOption = false
       wasOption = true
       currentOption.entries.shuffle()

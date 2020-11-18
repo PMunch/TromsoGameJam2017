@@ -153,7 +153,7 @@ proc main =
     submitbutton = newTextureRegion(renderer.loadTexture("submit.png"), 0, 0, 211, 125)
     continuebutton = newTextureRegion(renderer.loadTexture("continue.png"), 0, 0, 245, 142)
     submitdisabled = newTextureRegion(renderer.loadTexture("submit_disabled.png"), 0, 0, 211, 125)
-    reportX = 562 
+    reportX = 562
     reportY = 50
     allSelected = false
     font = openFont("digital_counter_7.ttf", 24)
@@ -367,9 +367,9 @@ proc main =
                 plug.connectedWith.connectedWith = nil
                 plug.connectedWith = nil
                 plug.texture = plugTexture
-                discard mixer.playChannel(-1,plugOutSound[plugOutSound.len.random], 0); #ogg/flac  
+                discard mixer.playChannel(-1,plugOutSound[plugOutSound.high.rand], 0); #ogg/flac  
               else:
-                discard mixer.playChannel(-1,pickUpSound[pickUpSound.len.random], 0); #ogg/flac  
+                discard mixer.playChannel(-1,pickUpSound[pickUpSound.high.rand], 0); #ogg/flac  
       of MouseButtonUp:
         if stage == Introduction or stage == Cutscene1 or stage == Cutscene2 or stage == Ending:
           var r = continuebutton.region
@@ -427,7 +427,7 @@ proc main =
                       plug.texture = plugConnectedTexture
                       room.currentConversation = days[day][pendingConversation]
                       room.connectedTime = timeOfDay
-                      discard mixer.playChannel(-1,plugInSound[plugInSound.len.random], 0); #ogg/flac  
+                      discard mixer.playChannel(-1,plugInSound[plugInSound.high.rand], 0); #ogg/flac  
                       pendingConversation = -1
                       discard mixer.haltChannel(callBuzzerChannel)
                       break
@@ -496,7 +496,7 @@ proc main =
           currentSpeaker.setText(currentLine.sentence)
           if oldLineNumber != lineNumber or room.currentTween == nil:
             room.currentTween = initTween(0.5, Ease.OutSine)
-            let mumbleID = random(6) + (if currentLine.sentence.len < 6: 12 else: 6)
+            let mumbleID = rand(5) + (if currentLine.sentence.len < 6: 12 else: 6)
             discard mixer.playChannel(-1,statementSounds[mumbleID],0)
           if timeShown > 1.5:
             room.currentTween.tick(tickLength)
